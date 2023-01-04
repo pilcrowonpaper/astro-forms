@@ -2,7 +2,7 @@
 import LoginForm from "../lib/login-form";
 import { handleFormSubmission, redirect, reject } from "../actions/server";
 
-const { response, values, error } = await handleFormSubmission(
+const { response, inputValues, error } = await handleFormSubmission(
   Astro,
   async (formData) => {
     const username = formData.get("username");
@@ -34,7 +34,7 @@ if (response) return response;
   <body class="py-8">
     <main class="w-full max-w-sm mx-auto">
       <h2 class="font-semibold text-2xl">Sign in</h2>
-      <LoginForm client:load values={values} errorMessage={error?.message} />
+      <LoginForm client:load inputValues={inputValues} errorMessage={error?.message} />
     </main>
   </body>
 </html>

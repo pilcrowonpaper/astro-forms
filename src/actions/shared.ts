@@ -3,7 +3,7 @@ export type Result<V extends {}> =
       type: "success";
       response: Response | null;
       body: V;
-      values: Record<string, any>;
+      inputValues: Record<string, any>;
       error: null;
       redirected: false;
     }
@@ -11,7 +11,7 @@ export type Result<V extends {}> =
       type: "reject";
       response: Response | null;
       body: null;
-      values: Record<string, any>;
+      inputValues: Record<string, any>;
       error: Record<string, any>;
       redirected: false;
     }
@@ -19,7 +19,7 @@ export type Result<V extends {}> =
       type: "redirect";
       response: Response | null;
       body: null;
-      values: Record<string, any>;
+      inputValues: Record<string, any>;
       error: null;
       redirected: true;
     }
@@ -27,7 +27,7 @@ export type Result<V extends {}> =
       type: "ignore";
       response: null;
       body: null;
-      values: Record<string, any>;
+      inputValues: Record<string, any>;
       error: null;
       redirected: false;
     };

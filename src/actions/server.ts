@@ -29,29 +29,46 @@ export const handleFormSubmission = async <
 ): Promise<Result<Awaited<ReturnType<Handle>>>> => {
   type FullJsonResult = JsonResult<Awaited<ReturnType<Handle>>>;
   const clonedRequest = request.clone();
-  if (clonedRequest.method !== "POST")
+  const contentType = clonedRequest.headers.get("content-type") ?? "";
+  const isMultipartForm = contentType.includes("multipart/form-data");
+  const isUrlEncodedForm = contentType.includes(
+    "application/x-www-form-urlencoded"
+  );
+  const isValidContentType = isMultipartForm || isUrlEncodedForm;
+  if (clonedRequest.method !== "POST" || !isValidContentType)
     return {
       type: "ignore",
       response: null,
       body: null,
-      values: {},
+      inputValues: {},
       error: null,
       redirected: false,
     };
-  const contentType = clonedRequest.headers.get("content-type") ?? "";
-  const acceptHeader = clonedRequest.headers.get("accept");
-  const boundary = contentType.replace("multipart/form-data; boundary=", "");
-  const parts = parse(Buffer.from(await clonedRequest.arrayBuffer()), boundary);
   const formData = new FormData();
-  parts.forEach((value) => {
-    const isFile = !!value.type;
-    if (isFile) {
-      formData.append(value.name!, new Blob([value.data]), value.filename!);
-    } else {
-      formData.append(value.name!, value.data.toString());
-    }
-  });
-  const values = Object.fromEntries(formData.entries());
+  const acceptHeader = clonedRequest.headers.get("accept");
+  if (isMultipartForm) {
+    const boundary = contentType.replace("multipart/form-data; boundary=", "");
+    const parts = parse(
+      Buffer.from(await clonedRequest.arrayBuffer()),
+      boundary
+    );
+    parts.forEach((value) => {
+      const isFile = !!value.type;
+      if (isFile) {
+        formData.append(value.name!, new Blob([value.data]), value.filename!);
+      } else {
+        formData.append(value.name!, value.data.toString());
+      }
+    });
+  } else if (isUrlEncodedForm) {
+    const requestBodyFormData = await clonedRequest.formData();
+    requestBodyFormData.forEach((value, key) => {
+      formData.append(key, value);
+    });
+  } else {
+    throw new Error("Unexpected value");
+  }
+  const inputValues = Object.fromEntries(formData.entries());
   try {
     const body = (await handle(formData)) as Awaited<ReturnType<Handle>>;
     if (acceptHeader === "application/json") {
@@ -66,7 +83,7 @@ export const handleFormSubmission = async <
             redirect_location: null,
           } satisfies FullJsonResult)
         ),
-        values,
+        inputValues,
         error: null,
         redirected: false,
       };
@@ -75,7 +92,7 @@ export const handleFormSubmission = async <
       type: "success",
       body,
       response: null,
-      values,
+      inputValues,
       error: null,
       redirected: false,
     };
@@ -96,7 +113,7 @@ export const handleFormSubmission = async <
               status: e.status,
             }
           ),
-          values,
+          inputValues,
           error: e.data,
           redirected: false,
         };
@@ -106,7 +123,7 @@ export const handleFormSubmission = async <
         type: "reject",
         body: null,
         response: null,
-        values,
+        inputValues,
         error: e.data,
         redirected: false,
       };
@@ -127,7 +144,7 @@ export const handleFormSubmission = async <
               status: e.status,
             }
           ),
-          values,
+          inputValues,
           error: null,
           redirected: true,
         };
@@ -138,7 +155,7 @@ export const handleFormSubmission = async <
         type: "redirect",
         body: null,
         response: null,
-        values,
+        inputValues,
         error: null,
         redirected: true,
       };

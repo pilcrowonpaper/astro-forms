@@ -3,7 +3,7 @@ import { submitForm } from "../actions/client";
 
 export default (props: {
   errorMessage?: string;
-  values?: Record<string, any>;
+  inputValues?: Record<string, any>;
 }) => {
   const [errorMessage, setErrorMessage] = createSignal(
     props.errorMessage ?? null
@@ -25,7 +25,7 @@ export default (props: {
       <label for="label">Username</label>
       <input
         name="username"
-        value={props.values?.username ?? ""}
+        value={props.inputValues?.username ?? ""}
         id="username"
         class="border w-full"
       />
@@ -33,7 +33,7 @@ export default (props: {
       <input
         type="password"
         name="password"
-        value={props.values?.password ?? ""}
+        value={props.inputValues?.password ?? ""}
         id="password"
         class="border w-full "
       />
