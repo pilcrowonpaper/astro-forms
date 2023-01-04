@@ -1,0 +1,40 @@
+---
+import LoginForm from "../lib/login-form";
+import { handleFormSubmission, redirect, reject } from "../actions/server";
+
+const { response, values, error } = await handleFormSubmission(
+  Astro,
+  async (formData) => {
+    const username = formData.get("username");
+    const password = formData.get("password");
+    const isValidInput =
+      typeof username !== "string" || typeof password !== "string";
+    if (isValidInput)
+      throw reject(400, {
+        message: "Invalid input",
+      });
+    const isValidCredentials = username === "user" && password === "123456";
+    if (isValidCredentials) throw redirect(302, "/profile");
+    throw reject(400, {
+      message: "Invalid credentials",
+    });
+  }
+);
+if (response) return response;
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <title>Sign in</title>
+  </head>
+  <body class="py-8">
+    <main class="w-full max-w-sm mx-auto">
+      <h2 class="font-semibold text-2xl">Sign in</h2>
+      <LoginForm client:load values={values} errorMessage={error?.message} />
+    </main>
+  </body>
+</html>
